@@ -47,8 +47,10 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.listen(PORT, () => {
-	console.log(`MCP Server running on http://${HOST}:${PORT}`);
-	console.log(`Health check: http://${HOST}:${PORT}/health`);
-	console.log(`SSE endpoint: http://${HOST}:${PORT}/sse`);
-	console.log(`Message endpoint: http://${HOST}:${PORT}/message`);
+	console.table([
+		{ Name: "MCP Server", URL: `http://${HOST}:${PORT}` },
+  		{ Name: "Health check", URL: `http://${HOST}:${PORT}/health` },
+		{ Name: "SSE endpoint", URL: `http://${HOST}:${PORT}/sse` },
+		{ Name: "Message endpoint", URL: `http://${HOST}:${PORT}/message` },
+	]);
 });
