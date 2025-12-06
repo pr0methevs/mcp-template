@@ -43,6 +43,16 @@ export interface Resource {
 	mimeType?: string;
 }
 
+export interface Prompt {
+	name: string;
+	description: string;
+	arguments?: Array<{
+		name: string;
+		description: string;
+		required?: boolean;
+	}>;
+}
+
 export interface SSEConnection {
 	id: string;
 	res: Response;

@@ -7,6 +7,8 @@ import {
 	InitializeResult
 } from './types';
 import { availableTools, executeTool, validateToolArgs } from './tools';
+import { availableResources, readResource, writeResource, validateResourceUri } from './resources';
+import { availablePrompts, getPrompt, validatePromptArgs } from './prompts';
 
 export class MCPServer {
 	private connections: Map<string, SSEConnection> = new Map();
@@ -76,6 +78,18 @@ export class MCPServer {
 			case 'tools/call':
 				return this.handleToolsCall(request);
 
+			case 'resources/list':
+				return this.handleResourcesList(request);
+
+			case 'resources/read':
+				return await this.handleResourcesRead(request);
+
+			case 'prompts/list':
+				return this.handlePromptsList(request);
+
+			case 'prompts/get':
+				return await this.handlePromptsGet(request);
+
 			case 'ping':
 				return this.handlePing(request);
 
@@ -97,7 +111,9 @@ export class MCPServer {
 		const result: InitializeResult = {
 			protocolVersion: '2024-11-05',
 			capabilities: {
-				tools: {}
+				tools: {},
+				resources: {},
+				prompts: {}
 			},
 			serverInfo: {
 				name: this.serverName,
@@ -164,6 +180,86 @@ export class MCPServer {
 			id: request.id,
 			result: {}
 		};
+	}
+
+	private handleResourcesList(request: MCPRequest): MCPResponse {
+		return {
+			jsonrpc: '2.0',
+			id: request.id,
+			result: {
+				resources: availableResources
+			}
+		};
+	}
+
+	private async handleResourcesRead(request: MCPRequest): Promise<MCPResponse> {
+		try {
+			const { uri } = request.params as { uri: string };
+
+			validateResourceUri(uri);
+			const result = await readResource(uri);
+
+			return {
+				jsonrpc: '2.0',
+				id: request.id,
+				result
+			};
+		} catch (error) {
+			return {
+				jsonrpc: '2.0',
+				id: request.id,
+				error: {
+					code: -32602,
+					message: error instanceof Error ? error.message : 'Invalid params'
+				}
+			};
+		}
+	}
+
+	private handlePromptsList(request: MCPRequest): MCPResponse {
+		return {
+			jsonrpc: '2.0',
+			id: request.id,
+			result: {
+				prompts: availablePrompts
+			}
+		};
+	}
+
+	private async handlePromptsGet(request: MCPRequest): Promise<MCPResponse> {
+		try {
+			const { name, arguments: args } = request.params as { name: string; arguments?: Record<string, any> };
+
+			const prompt = availablePrompts.find(p => p.name === name);
+			if (!prompt) {
+				return {
+					jsonrpc: '2.0',
+					id: request.id,
+					error: {
+						code: -32602,
+						message: `Prompt not found: ${name}`
+					}
+				};
+			}
+
+			validatePromptArgs(prompt, args);
+			const result = await getPrompt(name, args);
+
+			return {
+				jsonrpc: '2.0',
+				id: request.id,
+				result
+			};
+		} catch (error) {
+			return {
+				jsonrpc: '2.0',
+				id: request.id,
+				error: {
+					code: -32602,
+					message: error instanceof Error ? error.message : 'Invalid params'
+				}
+			};
+		}
 	}
 
 	broadcastNotification(method: string, params?: Record<string, any>): void {
