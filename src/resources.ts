@@ -1,25 +1,4 @@
-import { type Resource } from './types';
-
-export const availableResources: Resource[] = [
-	{
-		uri: 'memory://scratch',
-		name: 'Scratch Pad',
-		description: 'A temporary scratch pad for notes and ideas',
-		mimeType: 'text/plain'
-	},
-	{
-		uri: 'memory://context',
-		name: 'Context Storage',
-		description: 'Stores conversation context and state',
-		mimeType: 'application/json'
-	},
-	{
-		uri: 'file://config',
-		name: 'Configuration',
-		description: 'Server configuration and settings',
-		mimeType: 'application/json'
-	}
-];
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 // In-memory storage for resources
 const resourceStorage: Record<string, string> = {
@@ -28,53 +7,52 @@ const resourceStorage: Record<string, string> = {
 	'file://config': JSON.stringify({ version: '1.0.0', debug: false })
 };
 
-export async function readResource(uri: string): Promise<any> {
-	const resource = availableResources.find(r => r.uri === uri);
+export function registerResources(server: McpServer) {
+	server.resource(
+		"scratch-pad",
+		"memory://scratch",
+		{
+			mimeType: "text/plain",
+			description: "A temporary scratch pad for notes and ideas"
+		},
+		async (uri) => ({
+			contents: [{
+				uri: uri.href,
+				mimeType: "text/plain",
+				text: resourceStorage["memory://scratch"]
+			}]
+		})
+	);
 
-	if (!resource) {
-		throw new Error(`Resource not found: ${uri}`);
-	}
+	server.resource(
+		"context-storage",
+		"memory://context",
+		{
+			mimeType: "application/json",
+			description: "Stores conversation context and state"
+		},
+		async (uri) => ({
+			contents: [{
+				uri: uri.href,
+				mimeType: "application/json",
+				text: resourceStorage["memory://context"]
+			}]
+		})
+	);
 
-	const content = resourceStorage[uri] || '';
-
-	return {
-		contents: [
-			{
-				uri,
-				mimeType: resource.mimeType,
-				text: content
-			}
-		]
-	};
-}
-
-export async function writeResource(uri: string, content: string): Promise<any> {
-	const resource = availableResources.find(r => r.uri === uri);
-
-	if (!resource) {
-		throw new Error(`Resource not found: ${uri}`);
-	}
-
-	// Don't allow writing to file:// resources
-	if (uri.startsWith('file://')) {
-		throw new Error(`Cannot write to read-only resource: ${uri}`);
-	}
-
-	resourceStorage[uri] = content;
-
-	return {
-		contents: [
-			{
-				uri,
-				mimeType: resource.mimeType,
-				text: content
-			}
-		]
-	};
-}
-
-export function validateResourceUri(uri: string): void {
-	if (!availableResources.some(r => r.uri === uri)) {
-		throw new Error(`Unknown resource: ${uri}`);
-	}
+	server.resource(
+		"configuration",
+		"file://config",
+		{
+			mimeType: "application/json",
+			description: "Server configuration and settings"
+		},
+		async (uri) => ({
+			contents: [{
+				uri: uri.href,
+				mimeType: "application/json",
+				text: resourceStorage["file://config"]
+			}]
+		})
+	);
 }
