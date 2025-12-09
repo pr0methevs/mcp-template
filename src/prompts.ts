@@ -1,6 +1,52 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
+export const PROMPTS = [
+	{
+		name: "summarize",
+		description: "Summarize the given content",
+		arguments: [
+			{
+				name: "content",
+				description: "The content to summarize",
+				required: true
+			},
+			{
+				name: "length",
+				description: "How brief the summary should be (short, medium, long)",
+				required: false
+			}
+		]
+	},
+	{
+		name: "analyze_sentiment",
+		description: "Analyze the sentiment of the provided text",
+		arguments: [
+			{
+				name: "text",
+				description: "The text to analyze",
+				required: true
+			}
+		]
+	},
+	{
+		name: "generate_ideas",
+		description: "Generate creative ideas for a given topic",
+		arguments: [
+			{
+				name: "topic",
+				description: "The topic to generate ideas for",
+				required: true
+			},
+			{
+				name: "count",
+				description: "Number of ideas to generate",
+				required: false
+			}
+		]
+	}
+];
+
 export function registerPrompts(server: McpServer) {
 	server.prompt(
 		"summarize",

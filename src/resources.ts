@@ -7,6 +7,27 @@ const resourceStorage: Record<string, string> = {
 	'file://config': JSON.stringify({ version: '1.0.0', debug: false })
 };
 
+export const RESOURCES = [
+	{
+		uri: "memory://scratch",
+		name: "Scratch Pad",
+		mimeType: "text/plain",
+		description: "A temporary scratch pad for notes and ideas"
+	},
+	{
+		uri: "memory://context",
+		name: "Context Storage",
+		mimeType: "application/json",
+		description: "Stores conversation context and state"
+	},
+	{
+		uri: "file://config",
+		name: "Configuration",
+		mimeType: "application/json",
+		description: "Server configuration and settings"
+	}
+];
+
 export function registerResources(server: McpServer) {
 	server.resource(
 		"scratch-pad",

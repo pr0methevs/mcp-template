@@ -3,9 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
-import { registerTools } from "./tools";
-import { registerResources } from "./resources";
-import { registerPrompts } from "./prompts";
+import { registerTools, TOOLS } from "./tools";
+import { registerResources, RESOURCES } from "./resources";
+import { registerPrompts, PROMPTS } from "./prompts";
 
 dotenv.config();
 
@@ -103,12 +103,19 @@ app.get("/", (_req: Request, res: Response) => {
 	res.json({
 		name: "MCP Server",
 		version: "1.0.0",
-		endpoints: {
-			health: "GET /health",
-			sse: "GET /sse",
-			message: "POST /message",
-		},
+		description: "TypeScript MCP Server with Express",
 		documentation: "https://modelcontextprotocol.io",
+		endpoints: {
+			health: `GET /health`,
+			sse: `GET /sse`,
+			message: `POST /message`,
+		},
+		capabilities: {
+			tools: TOOLS.map(t => ({ name: t.name, description: t.description })),
+			resources: RESOURCES.map(r => ({ uri: r.uri, name: r.name, description: r.description })),
+			prompts: PROMPTS.map(p => ({ name: p.name, description: p.description })),
+		},
+		help: "To use this server, connect your MCP client (e.g., Claude Desktop, Cursor) to the /sse endpoint."
 	});
 });
 
